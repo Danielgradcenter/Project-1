@@ -1,0 +1,107 @@
+---
+title: "Project 1"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-09-21"
+---
+
+```{r setup, include=FALSE}
+# reading in the text File 
+data <- readLines("C:/Users/dbrusche/Desktop/tournamentinfo.txt")
+head(data)
+
+
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars4}
+
+# Remove lines containing only hyphens
+#data <- data[!grepl("^[-]+$", data)]
+
+# Remove the header lines
+data <- data[-(1:3)]
+
+# Replace "->" with ">>"
+data <- gsub("->", ">>", data)
+
+# View the cleaned data
+head(data)
+
+library(stringr)
+# Format 1: Records starting with a number (player data)
+data1 <- data[str_detect(data, "^\\s*\\d")]
+
+# Format 2: Records starting with uppercase letters (e.g., state codes)
+data2 <- data[str_detect(data, "^\\s*[A-Z]{2}")]
+
+
+head(data1)
+head(data2)
+
+
+
+
+```
+
+```{r cars3}
+format2_df <- data.frame(
+  player_state  = str_trim(substr(data2, 1,  6), side = "both"),
+  uscf_id       = str_extract(substr(data2, 8,  40), "\\d+"),
+  pre_rating    = as.numeric(str_extract(substr(data2, 8,  40), "(?<=R: )\\d+")),
+  post_rating   = as.numeric(str_extract(substr(data2, 8,  40), "(?<=>>)\\d+")),
+  stringsAsFactors = FALSE
+)
+
+format1_df <- data.frame(
+  player_num = as.numeric(str_trim(substr(data1, 1, 6))),  # Player number
+  player_name = str_trim(substr(data1, 8, 40)),              # Player name
+  total_pts = as.numeric(str_trim(substr(data1, 42, 46))),  # Total points
+  round1 = str_trim(substr(data1, 48, 52)),                  # Round 1 result
+  round2 = str_trim(substr(data1, 54, 58)),                  # Round 2 result
+  round3 = str_trim(substr(data1, 60, 64)),                  # Round 3 result
+  round4 = str_trim(substr(data1, 66, 70)),                  # Round 4 result
+  round5 = str_trim(substr(data1, 72, 76)),                  # Round 5 result
+  round6 = str_trim(substr(data1, 78, 82)),                  # Round 6 result
+  round7 = str_trim(substr(data1, 84, 88)),                  # Round 7 result
+  stringsAsFactors = FALSE
+)
+
+```
+
+
+```{r cars2}
+
+library(dplyr)
+
+
+result_df <- cbind(format1_df, format2_df)
+
+result_df <- na.omit(result_df)
+
+# Assuming result_df is your data frame
+result_df$average_pre_rating <- mean(result_df$pre_rating, na.rm = TRUE)
+
+# Final selection
+Final_df <- result_df %>%
+ select(player_name, player_state, total_pts, pre_rating, average_pre_rating)
+
+
+
+
+
+# Write to CSV
+write.csv(Final_df, "chess_tournament_results3.csv", row.names = FALSE)
+
+  
+  
+  
+
+```
